@@ -1,1125 +1,895 @@
 
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ETF动量分析看板</title>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-                background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-                color: #333;
-                line-height: 1.6;
-                padding: 20px;
-            }
-
-            .container {
-                max-width: 1400px;
-                margin: 0 auto;
-                background: white;
-                border-radius: 16px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                overflow: hidden;
-            }
-
-            .header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 30px;
-                text-align: center;
-            }
-
-            .header h1 {
-                font-size: 2.5rem;
-                margin-bottom: 10px;
-                font-weight: 700;
-            }
-
-            .header p {
-                font-size: 1.1rem;
-                opacity: 0.9;
-            }
-
-            .update-time {
-                font-size: 0.9rem;
-                opacity: 0.8;
-                margin-top: 10px;
-            }
-
-            .content {
-                padding: 30px;
-            }
-
-            .card {
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-                margin-bottom: 30px;
-                overflow: hidden;
-            }
-
-            .card-header {
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                padding: 20px;
-                border-bottom: 1px solid #dee2e6;
-            }
-
-            .card-header h2 {
-                font-size: 1.5rem;
-                color: #495057;
-                margin: 0;
-            }
-
-            .card-body {
-                padding: 20px;
-            }
-
-            .chart-container {
-                width: 100%;
-                height: 500px;
-            }
-
-            .table-container {
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .data-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 0.9rem;
-            }
-
-            .data-table th,
-            .data-table td {
-                padding: 12px 8px;
-                text-align: left;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            .data-table th {
-                background: #f8f9fa;
-                font-weight: 600;
-                color: #495057;
-                position: sticky;
-                top: 0;
-            }
-
-            .data-table tr:hover {
-                background-color: #f8f9fa;
-                transition: background-color 0.2s ease;
-            }
-
-            .data-table td {
-                transition: background-color 0.2s ease;
-            }
-
-            @media (max-width: 768px) {
-                body {
-                    padding: 10px;
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ETF动量分析看板</title>
+            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+            <style>
+                * { margin:0; padding:0; box-sizing:border-box; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%); color:#333; padding:20px; }
+                .container { max-width:1400px; margin:0 auto; background:white; border-radius:16px; 
+                             box-shadow:0 10px 30px rgba(0,0,0,0.1); overflow:hidden; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; 
+                          padding:30px; text-align:center; }
+                .header h1 { font-size:2.5rem; margin-bottom:10px; font-weight:700; }
+                .header p { font-size:1.1rem; opacity:0.9; }
+                .update-time { font-size:0.9rem; opacity:0.8; margin-top:10px; }
+                .content { padding:30px; }
+                .card { background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.08); 
+                        margin-bottom:30px; overflow:hidden; }
+                .card-header { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+                               padding:20px; border-bottom:1px solid #dee2e6; }
+                .card-header h2 { font-size:1.5rem; color:#495057; }
+                .card-body { padding:20px; }
+                .chart-container { width:100%; height:500px; }
+                .table-container { width:100%; overflow-x:auto; }
+                .data-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+                .data-table th, .data-table td { padding:12px 8px; text-align:left; border-bottom:1px solid #e9ecef; }
+                .data-table th { background:#f8f9fa; font-weight:600; color:#495057; position:sticky; top:0; }
+                .data-table tr:hover { background-color:#f8f9fa; transition: background-color 0.2s ease; }
+                @media (max-width:768px) {
+                    body { padding:10px; } .header { padding:20px 15px; } .header h1 { font-size:1.8rem; }
+                    .content { padding:15px; } .chart-container { height:400px; } .data-table { font-size:0.8rem; }
                 }
-
-                .header {
-                    padding: 20px 15px;
-                }
-
-                .header h1 {
-                    font-size: 1.8rem;
-                }
-
-                .content {
-                    padding: 15px;
-                }
-
-                .chart-container {
-                    height: 400px;
-                }
-
-                .data-table {
-                    font-size: 0.8rem;
-                }
-
-                .data-table th,
-                .data-table td {
-                    padding: 8px 4px;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .header h1 {
-                    font-size: 1.5rem;
-                }
-
-                .chart-container {
-                    height: 350px;
-                }
-
-                .data-table {
-                    font-size: 0.7rem;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>📈 ETF动量分析看板</h1>
-                <p>实时监控ETF动量指标，辅助投资决策</p>
-                <div class="update-time">最后更新: 2026-05-17 14:43:55</div>
-            </div>
-
-            <div class="content">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>📊 ETF 25日动量分数 Top 20</h2>
-                    </div>
-                    <div class="card-body">
-                        <div id="bar-chart" class="chart-container"></div>
-                    </div>
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📈 ETF动量分析看板</h1>
+                    <p>实时监控ETF动量指标，辅助投资决策</p>
+                    <div class="update-time">最后更新: 2026-05-17 16:46:28</div>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2>📋 完整ETF排名表</h2>
+                <div class="content">
+                    <div class="card">
+                        <div class="card-header"><h2>📊 ETF 25日动量分数 Top 20</h2></div>
+                        <div class="card-body"><div id="bar-chart" class="chart-container"></div></div>
                     </div>
-                    <div class="card-body">
-                        
+                    <div class="card">
+                        <div class="card-header"><h2>📋 完整ETF排名表</h2></div>
+                        <div class="card-body">
         <div class="table-container">
         <table class="data-table">
         <thead>
         <tr>
-            <th>序号</th>
-            <th>ETF名称</th>
-            <th>ETF代码</th>
-            <th>当前股价</th>
-            <th>25日动量分数</th>
-            <th>12日动量分数</th>
-            <th>当日涨幅(%)</th>
-            <th>乖离率(%)</th>
-            <th>维持动量需(元)</th>
-            <th>预测价格(元)</th>
+            <th>序号</th><th>ETF名称</th><th>ETF代码</th><th>当前股价</th><th>25日动量分数</th><th>12日动量分数</th>
+            <th>当日涨幅(%)</th><th>乖离率(%)</th><th>维持动量需(元)</th><th>预测价格(元)</th>
         </tr>
         </thead>
         <tbody>
         
             <tr>
                 <td>1</td>
-                <td>中韩半导体</td>
-                <td>513310.SH</td>
+                <td>中韩半导体</td><td>513310.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+6.0050</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+630.4936</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+163697.6764</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+18.23%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.8545</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.2385</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+497.5788</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+439933.2311</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.72%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+20.36%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+5.6257</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.0487</span></td>
             </tr>
             
             <tr>
                 <td>2</td>
-                <td>半导体ETF</td>
-                <td>512480.SH</td>
+                <td>半导体ETF</td><td>512480.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+2.0350</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+29.9535</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+173.1191</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+8.79%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0950</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1199</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+31.5107</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+339.9926</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.39%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+9.76%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0621</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1002</span></td>
             </tr>
             
             <tr>
                 <td>3</td>
-                <td>存储芯片ETF</td>
-                <td>512760.SH</td>
+                <td>存储芯片ETF</td><td>512760.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.0920</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+27.2848</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+120.1523</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.16%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1307</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1423</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+29.5381</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+254.8403</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.73%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+5.72%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1146</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1335</span></td>
             </tr>
             
             <tr>
                 <td>4</td>
-                <td>科创50ETF</td>
-                <td>588080.SH</td>
+                <td>科创50ETF</td><td>588080.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.7330</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+16.5581</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+57.6504</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.18%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8052</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8185</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+18.4261</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+133.0872</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.65%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.85%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.7788</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8099</span></td>
             </tr>
             
             <tr>
                 <td>5</td>
-                <td>双创50ETF</td>
-                <td>588380.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2300</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+10.7486</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+45.6446</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+7.06%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2716</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2638</span></td>
+                <td>消费电子ETF</td><td>159732.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4390</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+12.6888</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+19.4907</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.83%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.15%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.5074</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4989</span></td>
             </tr>
             
             <tr>
                 <td>6</td>
-                <td>消费电子ETF</td>
-                <td>159732.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.4390</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+10.4885</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+12.6407</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.55%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5160</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5012</span></td>
+                <td>双创50ETF</td><td>588380.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2300</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+11.6045</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+58.1280</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.81%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+7.83%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2536</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2559</span></td>
             </tr>
             
             <tr>
                 <td>7</td>
-                <td>人工智能ETF</td>
-                <td>159819.SZ</td>
+                <td>人工智能ETF</td><td>159819.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.9430</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+9.4999</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+23.9096</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.54%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0325</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0213</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+10.9840</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+35.9326</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.61%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.14%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0109</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0157</span></td>
             </tr>
             
             <tr>
                 <td>8</td>
-                <td>通信ETF</td>
-                <td>515880.SH</td>
+                <td>通信ETF</td><td>515880.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.5000</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+8.6468</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+23.2543</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.75%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5484</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5445</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+9.5214</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+21.2674</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.85%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+7.49%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.5341</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.5366</span></td>
             </tr>
             
             <tr>
                 <td>9</td>
-                <td>机器人ETF</td>
-                <td>562500.SH</td>
+                <td>机器人ETF</td><td>562500.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.1640</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.8665</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+42.9595</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+7.44%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1602</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1699</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.2578</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+40.4057</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.19%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+8.26%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1389</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1570</span></td>
             </tr>
             
             <tr>
                 <td>10</td>
-                <td>纳指ETF</td>
-                <td>513100.SH</td>
+                <td>纳指ETF</td><td>513100.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+2.1000</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.7398</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+9.2624</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.81%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1384</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1449</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.8018</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+13.3644</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.24%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+5.33%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1057</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1341</span></td>
             </tr>
             
             <tr>
                 <td>11</td>
-                <td>纳斯达克ETF</td>
-                <td>513300.SH</td>
+                <td>纳斯达克ETF</td><td>513300.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+2.5480</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.3499</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+7.5082</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.17%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.6124</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.6141</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.6489</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+11.7016</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.93%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.62%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.5831</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.6056</span></td>
             </tr>
             
             <tr>
                 <td>12</td>
-                <td>创业AIETF</td>
-                <td>159363.SZ</td>
+                <td>创业AIETF</td><td>159363.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.3870</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.4871</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+14.0370</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.83%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.4192</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.4059</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.6949</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+8.2507</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.14%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.46%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4031</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3989</span></td>
             </tr>
             
             <tr>
                 <td>13</td>
-                <td>创业板ETF</td>
-                <td>159915.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.9700</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.2619</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+7.7484</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.79%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.0809</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.0314</span></td>
+                <td>VRETF</td><td>159786.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2680</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5995</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.3307</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.86%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.80%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3206</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3152</span></td>
             </tr>
             
             <tr>
                 <td>14</td>
-                <td>VRETF</td>
-                <td>159786.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2680</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.8849</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.3354</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.53%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3223</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3131</span></td>
+                <td>创业板ETF</td><td>159915.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.9700</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5767</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+7.1302</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.23%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+5.30%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.0464</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.0185</span></td>
             </tr>
             
             <tr>
                 <td>15</td>
-                <td>国泰小盘</td>
-                <td>160211.SZ</td>
+                <td>国泰小盘</td><td>160211.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+3.4940</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1021</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7292</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.06%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.6157</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.5932</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.4133</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8256</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.54%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.28%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5706</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5937</span></td>
             </tr>
             
             <tr>
                 <td>16</td>
-                <td>电网设备ETF</td>
-                <td>159326.SZ</td>
+                <td>电网设备ETF</td><td>159326.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+2.0420</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.7877</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.9035</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.77%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1156</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1239</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.2071</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8532</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.27%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.85%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1037</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1288</span></td>
             </tr>
             
             <tr>
                 <td>17</td>
-                <td>中证2000ETF</td>
-                <td>159531.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6110</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6029</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.6419</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.23%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6448</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6434</span></td>
+                <td>卫星ETF</td><td>159206.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8360</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9081</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.2982</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.86%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.60%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9948</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9746</span></td>
             </tr>
             
             <tr>
                 <td>18</td>
-                <td>工程机械ETF</td>
-                <td>560280.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8030</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5845</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.0763</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.30%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8174</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8382</span></td>
+                <td>中证2000ETF</td><td>159531.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6110</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.7528</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.1830</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.43%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.46%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6320</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6417</span></td>
             </tr>
             
             <tr>
                 <td>19</td>
-                <td>中证500ETF</td>
-                <td>159922.SZ</td>
+                <td>中证500ETF</td><td>159922.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+3.4270</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3610</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8854</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.85%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.5494</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.5357</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.7187</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.7842</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.69%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.95%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5329</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.5440</span></td>
             </tr>
             
             <tr>
                 <td>20</td>
-                <td>电力ETF</td>
-                <td>159611.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1630</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3075</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1063</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.59%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1816</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1830</span></td>
+                <td>工程机械ETF</td><td>560280.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8030</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.5723</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+5.1529</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.61%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.55%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8011</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8337</span></td>
             </tr>
             
             <tr>
                 <td>21</td>
-                <td>云计算ETF</td>
-                <td>159890.SZ</td>
+                <td>云计算ETF</td><td>159890.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.9210</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1902</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0366</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.53%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9906</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9721</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4755</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1601</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.08%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.69%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9754</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9749</span></td>
             </tr>
             
             <tr>
                 <td>22</td>
-                <td>汽车零部件ETF</td>
-                <td>159565.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6300</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0867</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.3397</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.16%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6345</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.6393</span></td>
+                <td>电力ETF</td><td>159611.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1630</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3942</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6978</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.85%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.76%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1728</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1816</span></td>
             </tr>
             
             <tr>
                 <td>23</td>
-                <td>日经ETF</td>
-                <td>513520.SH</td>
+                <td>日经ETF</td><td>513520.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+2.0850</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0159</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7286</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.71%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1664</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1506</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3144</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4432</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.84%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.79%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1472</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1564</span></td>
             </tr>
             
             <tr>
                 <td>24</td>
-                <td>卫星ETF</td>
-                <td>159206.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8360</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0016</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0580</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.45%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9948</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9536</span></td>
+                <td>汽车零部件ETF</td><td>159565.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6300</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0579</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.3569</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.87%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.50%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6243</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.6329</span></td>
             </tr>
             
             <tr>
                 <td>25</td>
-                <td>沪深300ETF</td>
-                <td>510300.SH</td>
+                <td>沪深300ETF</td><td>510300.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+4.8780</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7612</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3846</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.71%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+5.0092</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.9776</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9666</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8022</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.28%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.79%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.9979</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.9871</span></td>
             </tr>
             
             <tr>
                 <td>26</td>
-                <td>光伏ETF</td>
-                <td>515790.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1080</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7572</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0430</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.24%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1334</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1252</span></td>
+                <td>稀有金属ETF</td><td>562800.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1040</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9152</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0417</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.47%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.78%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2000</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1850</span></td>
             </tr>
             
             <tr>
                 <td>27</td>
-                <td>稀土ETF</td>
-                <td>516780.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9720</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.4976</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6373</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.09%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0405</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0343</span></td>
+                <td>光伏ETF</td><td>515790.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1080</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8664</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.3829</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.77%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.37%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1241</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1250</span></td>
             </tr>
             
             <tr>
                 <td>28</td>
-                <td>稀有金属ETF</td>
-                <td>562800.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1040</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3637</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0027</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.51%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1953</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1708</span></td>
+                <td>卫星产业ETF</td><td>159218.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8180</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7823</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0403</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.40%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.38%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9800</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9602</span></td>
             </tr>
             
             <tr>
                 <td>29</td>
-                <td>大数据ETF</td>
-                <td>515400.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0190</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3583</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.1153</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.46%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0615</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0507</span></td>
+                <td>稀土ETF</td><td>516780.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9720</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7382</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0024</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.75%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.10%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0437</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0425</span></td>
             </tr>
             
             <tr>
                 <td>30</td>
-                <td>卫星产业ETF</td>
-                <td>159218.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8180</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3026</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0003</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.06%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9822</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9355</span></td>
+                <td>军工ETF</td><td>512660.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3850</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5760</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0497</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.40%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.22%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4682</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.4588</span></td>
             </tr>
             
             <tr>
                 <td>31</td>
-                <td>上证50ETF</td>
-                <td>510050.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.0350</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3003</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0365</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.48%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.1079</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.0999</span></td>
+                <td>新能源ETF</td><td>516160.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.1990</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5740</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0030</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.74%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.24%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.3945</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.3372</span></td>
             </tr>
             
             <tr>
                 <td>32</td>
-                <td>新能源ETF</td>
-                <td>516160.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.1990</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.2553</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0039</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.12%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.3921</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.3110</span></td>
+                <td>大数据ETF</td><td>515400.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0190</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5638</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.2098</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.26%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.51%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0550</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0554</span></td>
             </tr>
             
             <tr>
                 <td>33</td>
-                <td>军工ETF</td>
-                <td>512660.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3850</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.2515</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0002</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.01%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.4690</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.4463</span></td>
+                <td>上证50ETF</td><td>510050.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.0350</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.4448</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.3090</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.27%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.53%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.0998</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.1089</span></td>
             </tr>
             
             <tr>
                 <td>34</td>
-                <td>道琼斯ETF</td>
-                <td>513400.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2360</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.1257</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0228</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.55%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2489</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2425</span></td>
+                <td>电池ETF</td><td>159755.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1680</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.2441</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0121</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.51%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.15%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2605</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2268</span></td>
             </tr>
             
             <tr>
                 <td>35</td>
-                <td>标普消费ETF</td>
-                <td>159529.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3080</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.1101</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.1835</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.42%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3229</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3145</span></td>
+                <td>软件ETF</td><td>159852.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8050</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.1643</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0004</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.35%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.54%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8400</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8403</span></td>
             </tr>
             
             <tr>
                 <td>36</td>
-                <td>煤炭ETF</td>
-                <td>515220.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2310</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0707</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2021</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.94%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2709</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2588</span></td>
+                <td>道琼斯ETF</td><td>513400.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2360</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.1562</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0010</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.08%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.61%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2451</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2430</span></td>
             </tr>
             
             <tr>
                 <td>37</td>
-                <td>软件ETF</td>
-                <td>159852.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8050</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0553</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0012</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.30%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8477</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8342</span></td>
+                <td>煤炭ETF</td><td>515220.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2310</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.1308</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0379</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.57%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.04%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2673</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2640</span></td>
             </tr>
             
             <tr>
                 <td>38</td>
-                <td>电池ETF</td>
-                <td>159755.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1680</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0526</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0913</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.94%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2594</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2136</span></td>
+                <td>标普消费ETF</td><td>159529.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3080</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.1308</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0746</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.53%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.46%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3150</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3148</span></td>
             </tr>
             
             <tr>
                 <td>39</td>
-                <td>恒生科技ETF</td>
-                <td>513130.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6190</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0417</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0656</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.14%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6360</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6321</span></td>
+                <td>豆粕ETF</td><td>159985.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0890</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0866</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0690</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.57%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.29%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1849</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.1567</span></td>
             </tr>
             
             <tr>
                 <td>40</td>
-                <td>豆粕ETF</td>
-                <td>159985.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0890</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0077</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1720</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.07%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1654</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.1416</span></td>
+                <td>恒生科技ETF</td><td>513130.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.6190</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0835</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.2199</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.83%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.26%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.6314</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.6344</span></td>
             </tr>
             
             <tr>
                 <td>41</td>
-                <td>航天航空ETF</td>
-                <td>159227.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2870</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0058</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0000</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.68%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3574</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3306</span></td>
+                <td>香港证券ETF</td><td>513090.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.7980</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0586</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0015</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.80%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.24%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8769</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8591</span></td>
             </tr>
             
             <tr>
                 <td>42</td>
-                <td>香港证券ETF</td>
-                <td>513090.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.7980</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0044</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0102</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.03%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8864</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8461</span></td>
+                <td>通用航空ETF</td><td>159378.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3130</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0412</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0265</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.23%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.65%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3980</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3791</span></td>
             </tr>
             
             <tr>
                 <td>43</td>
-                <td>金融科技ETF</td>
-                <td>159851.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7200</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0020</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0007</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.38%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7510</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7399</span></td>
+                <td>航天航空ETF</td><td>159227.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2870</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0405</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0038</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.91%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.96%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3506</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3413</span></td>
             </tr>
             
             <tr>
                 <td>44</td>
-                <td>通用航空ETF</td>
-                <td>159378.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3130</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0013</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0567</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.31%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2986</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3648</span></td>
+                <td>券商ETF</td><td>512000.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5010</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0307</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0007</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.15%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.62%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5206</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5181</span></td>
             </tr>
             
             <tr>
                 <td>45</td>
-                <td>券商ETF</td>
-                <td>512000.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.5010</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0013</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0042</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.37%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.5243</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.5147</span></td>
+                <td>金融科技ETF</td><td>159851.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7200</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0145</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0139</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.37%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.63%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7414</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7442</span></td>
             </tr>
             
             <tr>
                 <td>46</td>
-                <td>化工ETF</td>
-                <td>159870.SZ</td>
+                <td>化工ETF</td><td>159870.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.8960</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0003</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1530</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0137</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0220</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.02%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8557</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.9184</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.23%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9305</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9244</span></td>
             </tr>
             
             <tr>
                 <td>47</td>
-                <td>德国30ETF</td>
-                <td>513030.SH</td>
+                <td>德国30ETF</td><td>513030.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.7760</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0001</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0291</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.28%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.7454</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.8058</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0072</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0316</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.06%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.42%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8161</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8133</span></td>
             </tr>
             
             <tr>
                 <td>48</td>
-                <td>红利ETF</td>
-                <td>510880.SH</td>
+                <td>红利ETF</td><td>510880.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+3.2230</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0001</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2951</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0024</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1674</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.14%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.1527</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+3.2605</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.26%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.2869</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+3.2716</span></td>
             </tr>
             
             <tr>
                 <td>49</td>
-                <td>30年国债ETF</td>
-                <td>511090.SH</td>
+                <td>30年国债ETF</td><td>511090.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+115.4720</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0002</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0451</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.03%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+116.3177</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+115.5170</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0001</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0723</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.07%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.04%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+116.8548</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+115.5925</span></td>
             </tr>
             
             <tr>
                 <td>50</td>
-                <td>港股科技ETF</td>
-                <td>513020.SH</td>
+                <td>港股科技ETF</td><td>513020.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.9940</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0006</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.0014</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.30%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0293</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0160</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0000</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0020</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.74%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.54%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0094</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.0218</span></td>
             </tr>
             
             <tr>
                 <td>51</td>
-                <td>游戏ETF</td>
-                <td>159869.SZ</td>
+                <td>游戏ETF</td><td>159869.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.2740</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0333</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0040</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.62%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.3013</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2949</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0237</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0003</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.55%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.89%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2889</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3007</span></td>
             </tr>
             
             <tr>
                 <td>52</td>
-                <td>传媒ETF</td>
-                <td>512980.SH</td>
+                <td>传媒ETF</td><td>512980.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.9820</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0465</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0295</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.47%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.0063</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.9953</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0342</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0385</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.31%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.73%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9949</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9997</span></td>
             </tr>
             
             <tr>
                 <td>53</td>
-                <td>自由现金流ETF</td>
-                <td>159201.SZ</td>
+                <td>自由现金流ETF</td><td>159201.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.2790</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0717</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1374</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.04%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2982</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.2944</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0451</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0386</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.31%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.25%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.3004</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.2997</span></td>
             </tr>
             
             <tr>
                 <td>54</td>
-                <td>医药ETF</td>
-                <td>512010.SH</td>
+                <td>医药ETF</td><td>512010.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.3560</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0845</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1868</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.76%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3628</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.3620</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0562</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0226</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.11%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.05%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.3633</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.3640</span></td>
             </tr>
             
             <tr>
                 <td>55</td>
-                <td>银行ETF</td>
-                <td>512800.SH</td>
+                <td>银行ETF</td><td>512800.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.7790</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1180</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.5032</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.26%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7924</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7803</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0834</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.4972</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.64%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.39%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7904</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7824</span></td>
             </tr>
             
             <tr>
                 <td>56</td>
-                <td>养殖ETF</td>
-                <td>159865.SZ</td>
+                <td>养殖ETF</td><td>159865.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.5940</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1873</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0800</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.04%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6054</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.5952</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1560</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0910</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.00%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.26%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.6028</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.5974</span></td>
             </tr>
             
             <tr>
                 <td>57</td>
-                <td>黄金ETF</td>
-                <td>518880.SH</td>
+                <td>黄金ETF</td><td>518880.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+9.5540</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2034</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.1766</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-2.57%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1792</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1465</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.46%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.84%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+83.5569</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+9.6474</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+9.6893</span></td>
             </tr>
             
             <tr>
                 <td>58</td>
-                <td>创新药ETF</td>
-                <td>159992.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7980</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2286</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2946</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.52%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.9791</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8115</span></td>
+                <td>5GETF</td><td>515050.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1080</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1798</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.5511</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.21%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-81.17%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.5550</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.8599</span></td>
             </tr>
             
             <tr>
                 <td>59</td>
-                <td>食品饮料ETF</td>
-                <td>515170.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.4900</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2490</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.5777</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.07%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+4.2854</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.4962</span></td>
+                <td>创新药ETF</td><td>159992.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7980</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1841</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.1662</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.62%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.89%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8198</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8173</span></td>
             </tr>
             
             <tr>
                 <td>60</td>
-                <td>消费ETF</td>
-                <td>159928.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7080</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2672</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.4511</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.25%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+6.1920</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.7167</span></td>
+                <td>食品饮料ETF</td><td>515170.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.4900</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.2276</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3894</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.80%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.38%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+4.2854</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.4988</span></td>
             </tr>
             
             <tr>
                 <td>61</td>
-                <td>5GETF</td>
-                <td>515050.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1080</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2905</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.6561</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-75.72%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.3232</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.5941</span></td>
+                <td>消费ETF</td><td>159928.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7080</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.2384</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3222</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.67%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.59%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+6.1920</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.7207</span></td>
             </tr>
             
             <tr>
                 <td>62</td>
-                <td>农业ETF</td>
-                <td>159825.SZ</td>
+                <td>农业ETF</td><td>159825.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.7970</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.2906</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.3698</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-3.42%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.2441</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3002</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.12%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.77%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+6.9704</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.8053</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.8104</span></td>
             </tr>
             
             <tr>
                 <td>63</td>
-                <td>沙特ETF</td>
-                <td>159329.SZ</td>
+                <td>沙特ETF</td><td>159329.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.9140</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.3028</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.3574</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.54%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.2737</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3498</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.44%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.70%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+7.9936</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.9124</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.9149</span></td>
             </tr>
             
             <tr>
                 <td>64</td>
-                <td>南方原油</td>
-                <td>501018.SH</td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.0470</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.3234</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0647</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-1.02%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9171</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.9734</span></td>
+                <td>白银基金</td><td>161226.SZ</td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.5980</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3252</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.0162</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-3.78%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-5.18%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+22.7215</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.6428</span></td>
             </tr>
             
             <tr>
                 <td>65</td>
-                <td>白银基金</td>
-                <td>161226.SZ</td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.5980</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.3297</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.0114</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-4.70%</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+22.7215</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+2.6280</span></td>
+                <td>南方原油</td><td>501018.SH</td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.0470</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.3977</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.0048</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+2.71%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.13%</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+17.9026</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.9645</span></td>
             </tr>
             
             <tr>
                 <td>66</td>
-                <td>酒ETF</td>
-                <td>512690.SH</td>
+                <td>酒ETF</td><td>512690.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.4550</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.4321</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.7731</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-4.36%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.4022</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.6530</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-2.36%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-4.81%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+3.9793</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.4607</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.4641</span></td>
             </tr>
             
             <tr>
                 <td>67</td>
-                <td>香港创新药ETF</td>
-                <td>513120.SH</td>
+                <td>香港创新药ETF</td><td>513120.SH</td>
                 <td><span style="color:#ef4444;font-weight:bold">+1.1490</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.5770</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.6761</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-5.75%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.5328</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.6539</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.54%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-6.34%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+10.0489</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+1.1633</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+1.1757</span></td>
             </tr>
             
             <tr>
                 <td>68</td>
-                <td>旅游ETF</td>
-                <td>159766.SZ</td>
+                <td>旅游ETF</td><td>159766.SZ</td>
                 <td><span style="color:#ef4444;font-weight:bold">+0.6190</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.5836</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-0.7388</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.00%</span></td>
-                <td><span style="color:#22c55e;font-weight:bold">-5.35%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.5662</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-0.7002</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-1.90%</span></td>
+                <td><span style="color:#22c55e;font-weight:bold">-5.90%</span></td>
                 <td><span style="color:#ef4444;font-weight:bold">+5.4136</span></td>
-                <td><span style="color:#ef4444;font-weight:bold">+0.6257</span></td>
+                <td><span style="color:#ef4444;font-weight:bold">+0.6309</span></td>
             </tr>
-            
-        </tbody>
-        </table>
-        </div>
-        
+            </tbody></table></div></div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <script>
-            // 渲染柱状图
-            var barData = [{"hovertemplate": "<b>%{x}</b><br>\u52a8\u91cf\u5206\u6570: %{y:.3f}<extra></extra>", "marker": {"color": ["#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444"]}, "text": ["630.494", "29.953", "27.285", "16.558", "10.749", "10.489", "9.500", "8.647", "6.867", "4.740", "4.350", "3.487", "3.262", "2.885", "2.102", "1.788", "1.603", "1.584", "1.361", "1.308"], "textposition": "auto", "x": ["\u4e2d\u97e9\u534a\u5bfc\u4f53", "\u534a\u5bfc\u4f53ETF", "\u5b58\u50a8\u82af\u7247ETF", "\u79d1\u521b50ETF", "\u53cc\u521b50ETF", "\u6d88\u8d39\u7535\u5b50ETF", "\u4eba\u5de5\u667a\u80fdETF", "\u901a\u4fe1ETF", "\u673a\u5668\u4ebaETF", "\u7eb3\u6307ETF", "\u7eb3\u65af\u8fbe\u514bETF", "\u521b\u4e1aAIETF", "\u521b\u4e1a\u677fETF", "VRETF", "\u56fd\u6cf0\u5c0f\u76d8", "\u7535\u7f51\u8bbe\u5907ETF", "\u4e2d\u8bc12000ETF", "\u5de5\u7a0b\u673a\u68b0ETF", "\u4e2d\u8bc1500ETF", "\u7535\u529bETF"], "y": [630.4936005001861, 29.95345603857521, 27.28484536812837, 16.558142788613722, 10.748635953988437, 10.488520030458782, 9.499852047882191, 8.646837875674, 6.866548373540292, 4.739814608695157, 4.349898571621372, 3.4871098998610806, 3.2618991446295094, 2.884919128809347, 2.1020970379831696, 1.7876952145648073, 1.6029077146429893, 1.5844583403894377, 1.3610384746346385, 1.3075319457633405], "type": "bar"}];
-            var barLayout = {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"font": {"size": 20}, "text": "ETF 25\u65e5\u52a8\u91cf\u5206\u6570 Top 20", "x": 0.05, "xanchor": "left"}, "xaxis": {"tickangle": -45}, "font": {"size": 12}, "margin": {"t": 50, "b": 100, "l": 60, "r": 30}, "yaxis": {"title": {"text": "\u52a8\u91cf\u5206\u6570"}}, "plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"};
-
-            Plotly.newPlot('bar-chart', barData, barLayout, {
-                responsive: true,
-                displayModeBar: true,
-                modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d']
-            });
-
-            // 确保图表响应式
-            window.addEventListener('resize', function() {
-                Plotly.Plots.resize('bar-chart');
-            });
-        </script>
-    </body>
-    </html>
+            <script>
+                var barData = [{"hovertemplate": "<b>%{x}</b><br>\u52a8\u91cf\u5206\u6570: %{y:.3f}<extra></extra>", "marker": {"color": ["#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#ef4444"]}, "text": ["497.579", "31.511", "29.538", "18.426", "12.689", "11.604", "10.984", "9.521", "6.258", "4.802", "4.649", "3.695", "3.600", "3.577", "2.413", "2.207", "1.908", "1.753", "1.719", "1.572"], "textposition": "auto", "x": ["\u4e2d\u97e9\u534a\u5bfc\u4f53", "\u534a\u5bfc\u4f53ETF", "\u5b58\u50a8\u82af\u7247ETF", "\u79d1\u521b50ETF", "\u6d88\u8d39\u7535\u5b50ETF", "\u53cc\u521b50ETF", "\u4eba\u5de5\u667a\u80fdETF", "\u901a\u4fe1ETF", "\u673a\u5668\u4ebaETF", "\u7eb3\u6307ETF", "\u7eb3\u65af\u8fbe\u514bETF", "\u521b\u4e1aAIETF", "VRETF", "\u521b\u4e1a\u677fETF", "\u56fd\u6cf0\u5c0f\u76d8", "\u7535\u7f51\u8bbe\u5907ETF", "\u536b\u661fETF", "\u4e2d\u8bc12000ETF", "\u4e2d\u8bc1500ETF", "\u5de5\u7a0b\u673a\u68b0ETF"], "y": [497.5787860464013, 31.51071689268069, 29.538057642462114, 18.426103928724267, 12.688760558672932, 11.604473859294233, 10.983964930325508, 9.521361127690943, 6.257763708868858, 4.801798041580494, 4.648943538106996, 3.694930806198432, 3.599508530677664, 3.576743021602521, 2.413286736302678, 2.207119223235181, 1.9080593435212612, 1.7527736109790972, 1.7186650575804485, 1.572337499218983], "type": "bar"}];
+                var barLayout = {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"font": {"size": 20}, "text": "ETF 25\u65e5\u52a8\u91cf\u5206\u6570 Top 20", "x": 0.05, "xanchor": "left"}, "xaxis": {"tickangle": -45}, "font": {"size": 12}, "margin": {"t": 50, "b": 100, "l": 60, "r": 30}, "yaxis": {"title": {"text": "\u52a8\u91cf\u5206\u6570"}}, "plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"};
+                Plotly.newPlot('bar-chart', barData, barLayout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d']
+                });
+                window.addEventListener('resize', function() { Plotly.Plots.resize('bar-chart'); });
+            </script>
+        </body>
+        </html>
         
