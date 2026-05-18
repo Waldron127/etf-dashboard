@@ -252,7 +252,7 @@
             <div class="header">
                 <h1>📈 ETF动量分析看板</h1>
                 <p>实时监控ETF动量指标，辅助投资决策 | 股市有风险，投资需谨慎，版本：v5.1，ZYZ</p>
-                <div class="update-time">最后更新: 2026-05-18 20:57:17</div>
+                <div class="update-time">最后更新: 2026-05-18 21:02:54</div>
             </div>
             <div class="content">
                 <div class="left-panel">
@@ -1102,12 +1102,24 @@
 
                 var layout = {
                     template: 'plotly_white',
-                    title: series.name + ' (' + etfCode + ') 历史走势',
+                    title: {
+                        text: series.name + ' (' + etfCode + ') 历史走势',
+                        x: 0.05,
+                        xanchor: 'left',
+                        y: 0.98,
+                        yanchor: 'top'
+                    },
                     xaxis: { title: '日期', type: 'date' },
                     yaxis: { title: '收盘价', side: 'left', color: '#3b82f6' },
                     yaxis2: { title: '25日动量', overlaying: 'y', side: 'right', color: '#eab308' },
-                    legend: { orientation: 'h', y: 1.15, yanchor: 'bottom' },
-                    margin: { t: 60, b: 50, l: 60, r: 60 },
+                    legend: {
+                        orientation: 'h',
+                        y: -0.15,
+                        yanchor: 'top',
+                        x: 0.5,
+                        xanchor: 'center'
+                    },
+                    margin: { t: 80, b: 80, l: 60, r: 60 },
                     plot_bgcolor: 'rgba(0,0,0,0)',
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     hovermode: 'x unified'
