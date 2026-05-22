@@ -228,8 +228,8 @@
         <div class="container">
             <div class="header">
                 <h1>📈 ETF动量分析看板</h1>
-                <p>实时监控ETF动量指标，辅助投资决策 | 股市有风险，投资需谨慎，版本：v5.2，ZYZ</p>
-                <div class="update-time">最后更新: 2026-05-22 22:06:58</div>
+                <p>实时监控ETF动量指标，辅助投资决策 | 股市有风险，投资需谨慎，版本：v5.3，ZYZ</p>
+                <div class="update-time">最后更新: 2026-05-22 22:24:33</div>
             </div>
             <div class="content">
                 <div class="left-panel">
@@ -1069,11 +1069,11 @@
                         close: series.closes,
                         name: 'K线',
                         increasing: {
-                            line: { color: '#FF0000', width: 1.8 },
+                            line: { color: '#FF0000', width: 1.5 },
                             fillcolor: 'white'
                         },
                         decreasing: {
-                            line: { color: '#00B050', width: 1.8 },
+                            line: { color: '#00B050', width: 1.5 },
                             fillcolor: '#00B050'
                         },
                         xaxis: 'x',
@@ -1133,6 +1133,11 @@
                     }
                 }
 
+                // 默认显示近20个交易日，若不足20则显示全部
+                var totalLen = series.dates.length;
+                var startIdx = Math.max(0, totalLen - 50);
+                var endIdx = totalLen - 1;
+
                 var layout = {
                     template: 'plotly_white',
                     title: {
@@ -1155,6 +1160,7 @@
                         ticktext: monthLabels,
                         tickangle: 0,
                         automargin: true,
+                        range: [startIdx-0.5, endIdx+0.5],   // 初始只显示最近20个交易日
                         rangeslider: {
                             visible: true,
                             thickness: 0.04,
