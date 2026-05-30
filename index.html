@@ -163,7 +163,7 @@
         <div class="header">
             <h1>ETF动量分析看板</h1>
             <p>股市有风险，投资需谨慎 · 版本 v5.3 · ZYZ</p>
-            <div class="update-time">最后更新: 2026-05-30 18:17</div>
+            <div class="update-time">最后更新: 2026-05-30 19:16</div>
         </div>
         
         <div class="recommendation-panel">
@@ -185,28 +185,10 @@
                         </tr>
                     </thead>
                     <tbody>
-            <tr class="action-buy">
-                <td>9</td>
-                <td><strong>推荐持有</strong></td>
-                <td>港股通信息技术<br><span>159131.SZ</span></td>
-                <td>1.088</td>
-                <td>0.968</td>
-                <td>4.72</td>
-                <td>1.12%</td>
-                <td>25日动量连续5日上涨，且股价在5周线上（若跌破动量线或超出布林带上轨减仓）</td>
+            <tr>
+                <td colspan="8" class="empty-recommendation">暂无符合条件的持仓建议</td>
             </tr>
-            
-            <tr class="action-trim">
-                <td>1</td>
-                <td><strong>减仓持有</strong></td>
-                <td>中韩半导体<br><span>513310.SH</span></td>
-                <td>5.979</td>
-                <td>5.266</td>
-                <td>62.28</td>
-                <td>-1.50%</td>
-                <td>25日动量尽管下跌但仍然排名最高，且股价在5周线上（若跌破5周线清仓）</td>
-            </tr>
-            </tbody>
+        </tbody>
                 </table>
             </div>
         </div>
@@ -223,7 +205,7 @@
                             </tr>
                         </thead>
                         <tbody>
-            <tr data-etf-code="513310.SH" class="clickable-row recommended-row">
+            <tr data-etf-code="513310.SH" class="clickable-row">
                 <td>1</td>
                 <td>中韩半导体<br><span class="muted">513310.SH</span></td>
                 <td>5.979</td>
@@ -319,7 +301,7 @@
             </tr>
             
 
-            <tr data-etf-code="159131.SZ" class="clickable-row recommended-row">
+            <tr data-etf-code="159131.SZ" class="clickable-row">
                 <td>9</td>
                 <td>港股通信息技术<br><span class="muted">159131.SZ</span></td>
                 <td>1.088</td>
@@ -1171,7 +1153,7 @@
     </script>
     
         <script>
-            var recommendedHoldingCodes = ['159131.SZ', '513310.SH'];
+            var recommendedHoldingCodes = [];
             recommendedHoldingCodes.forEach(function(code) {
                 var row = document.querySelector('.data-table tbody tr[data-etf-code="' + code + '"]');
                 if (row) {
